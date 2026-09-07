@@ -1,23 +1,21 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { registerSchema } from "@/lib/validations"
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { name, email, password } = body;
 
-  if (!name || !email || !password) {
+  const parsedResponse = registerSchema.safeParse(body);
+  if (!parsedResponse.success) {
     return NextResponse.json(
-      { error: "Name, Email, and Password are all required fields" },
+      { error: parsedResponse.error.issues[0].message },
       { status: 400 }
     );
-  }
-  if (password.length < 8) {
-    return NextResponse.json(
-      { error: "Password must be at least 8 characters" },
-      { status: 400 }
-    );
-  }
+  } 
+
+  const { name, email, password } = parsedResponse.data;
+
   const existingUser = await prisma.user.findUnique({
     where: { email },
   });
