@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getGroupById, updateTask, deleteTask } from "@/lib/data";
+import { updateTaskSchema } from "@/lib/validations";
 
 export async function PATCH(
   request: Request,
@@ -14,7 +15,15 @@ export async function PATCH(
       { status: 401 }
     );
   }
-  
+  const body = await request.json();
+  const parsedResponse = updateTaskSchema.safeParse(body);
+  if (!parsedResponse.success) {
+    return NextResponse.json(
+      { error: parsedResponse.error.issues[0].message },
+      { status: 400 }
+    );
+  }
+
   const group = await getGroupById(params.id);
   if (!group) {
     return NextResponse.json({ error: "Group not found" }, { status: 404 });
@@ -26,7 +35,6 @@ export async function PATCH(
     );
   }
 
-  const body = await request.json();
   const updated = await updateTask(params.id, params.taskId, body);
 
   if (!updated) {
