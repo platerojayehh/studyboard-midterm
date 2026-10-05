@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import TaskItem from "@/components/TaskItem";
 import DeleteGroupButton from "@/components/DeleteGroupButton";
 import NewTaskForm from "@/components/NewTaskForm";
+import BookSearch from "@/components/BookSearch";
 
 export default async function GroupDetailPage({
   params,
@@ -49,7 +50,26 @@ export default async function GroupDetailPage({
             isOwner={isOwner}
           />
         ))}
+        {group.tasks.length === 0 && (
+          <p className="text-sm text-gray-500">No tasks yet.</p>
+        )}
       </ul>
+
+      {isOwner && (
+        <div className="mt-4">
+          <NewTaskForm groupId={group.id} />
+        </div>
+      )}
+
+      <h2 className="mt-8 text-lg font-semibold">Reference Books</h2>
+      <p className="mt-1 text-sm text-gray-500">
+        Powered by the Open Library API - search for books related to{" "} 
+        {group.subject}.
+      </p>
+      <div className="mt-3">
+        <BookSearch initialQuery={group.subject} />
+      </div>
     </div>
   );
 }
+
