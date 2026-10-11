@@ -20,6 +20,8 @@ export const createTaskSchema = z.object({
 });
 
 export const updateTaskSchema = z.object({
-    title: z.string().trim().min(1, "Title is required").max(200),
+    title: z.string().trim().min(1, "Title is required").max(200).optional(),
     done: z.boolean().optional(),
+}).refine((updates) => updates.title !== undefined || updates.done !== undefined, {
+    message: "At least one task field is required",
 });
