@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getGroupById, updateGroup, deleteGroup } from "@/lib/data";
 import { updateGroupSchema } from "@/lib/validations";
+import { emitGroup } from "@/lib/socket";
+import { request } from "https";
 
 export async function GET(
   request: Request,
@@ -22,36 +24,38 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
-
-  if (!session) {
+  if (!session){
     return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
+      {error: "Unauthorized"},
+      {status: 401}
     );
   }
-  
+
   const body = await request.json();
   const parsedResponse = updateGroupSchema.safeParse(body);
-  if (!parsedResponse.success) {
+  if ( !parsedResponse.success){
     return NextResponse.json(
-      { error: parsedResponse.error.issues[0].message },
+      { error: parsedResponse.error.issues[0].message},
       { status: 400 }
-    );
+    )
   }
+
   const group = await getGroupById(params.id);
-
-  if (!group) {
-    return NextResponse.json({ error: "Group not found" }, { status: 404 });
-  }
-
-  if (group.ownerId !== session.user.id) {
+  if (!group){
     return NextResponse.json(
-      { error: "Only the owner can modify this group" },
-      { status: 403 }
+      {error: "Group not found"},
+      {status: 404}
     );
   }
 
-  const updated = await updateGroup(params.id, parsedResponse.data);
+  if (group.ownerId !== session.user.id){
+    return NextResponse.json(
+      {error: "Only the owner can modify this group"},
+      {status: 403}
+    );
+  }
+
+  const updated = await updateGroup(params.id, body);
 
   if (!updated) {
     return NextResponse.json({ error: "Group not found" }, { status: 404 });
@@ -66,29 +70,40 @@ export async function DELETE(
 ) {
   const session = await getServerSession(authOptions);
 
-  if (!session) {
+  if (!session){
     return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
+      {error: "Unauthorized"},
+      {status: 401}
     );
   }
+
   const group = await getGroupById(params.id);
 
-  if (!group) {
-    return NextResponse.json({ error: "Group not found" }, { status: 404 });
-  }
-  if (group.ownerId !== session.user.id) {
+  if (!group){
     return NextResponse.json(
-      { error: "Only the owner can delete this group" },
-      { status: 403 }
+      {error: "Group not found"},
+      {status: 404}
     );
   }
-  
+
+  if (group.ownerId !== session.user.id){
+    return NextResponse.json(
+      {error: "Only the owner can delete this group"},
+      {status: 403}
+    );
+  }
+
   const deleted = await deleteGroup(params.id);
 
   if (!deleted) {
     return NextResponse.json({ error: "Group not found" }, { status: 404 });
   }
+
+  emitGroup(
+    params.id,
+    "group:deleted",
+    { groupId: params.id }
+  )
 
   return NextResponse.json({ message: "Group deleted" });
 }
