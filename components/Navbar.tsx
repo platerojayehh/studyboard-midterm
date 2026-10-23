@@ -14,7 +14,7 @@ export default function Navbar() {
   const { data: session, status } = useSession();
 
   return (
-    <nav className="flex items-center justify-between border-b px-6 py-4">
+    <nav className="flex items-center justify-between border-b border-emerald-800 bg-emerald-950 px-6 py-4 text-white">
       <div className="flex items-center gap-6">
         <span className="font-bold text-lg">StudyBoard</span>
         <div className="flex gap-4">
@@ -26,8 +26,8 @@ export default function Navbar() {
                 href={link.href}
                 className={
                   isActive
-                    ? "font-semibold text-blue-600"
-                    : "text-gray-600 hover:text-blue-600"
+                    ? "font-semibold text-lime-300"
+                    : "text-emerald-100 hover:text-lime-300"
                 }
               >
                 {link.label}
@@ -39,8 +39,8 @@ export default function Navbar() {
                 href="/groups/new"
                 className= {
                   pathname === "/groups/new"
-                    ? "font-semibold text-blue-600"
-                    : "text-gray-600 hover:text-blue-600"
+                    ? "font-semibold text-lime-300"
+                    : "text-emerald-100 hover:text-lime-300"
                 }  
               >
                 New Group
@@ -52,22 +52,22 @@ export default function Navbar() {
       <div className="flex items-center gap-4 text-sm">
         {status === "authenticated" ? (
           <>
-            <span className="text-gray-600">
+            <span className="text-emerald-100">
               Hi, {session.user?.name}
             </span>
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="text-gray-600 hover:text-blue-600"
+              className="text-emerald-100 hover:text-lime-300"
             >
               Sign Out
             </button>
           </>
         ) : (
           <>
-            <Link href="/login" className="text-gray-600 hover:text-blue-600">
+            <Link href="/login" className="text-emerald-100 hover:text-lime-300">
               Log In
             </Link>
-            <Link href="/register" className="text-gray-600 hover:text-blue-600">
+            <Link href="/register" className="text-emerald-100 hover:text-lime-300">
               Register
             </Link>
           </>

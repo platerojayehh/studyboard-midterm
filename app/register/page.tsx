@@ -95,7 +95,7 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
             className="mt-1 w-full rounded-md border px-3 py-2"
           />
-          <p className="mt-1 text-xs text-gray-500">At least 8 characters.</p>
+          <p className="mt-1 text-xs text-emerald-700">At least 8 characters.</p>
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
@@ -105,9 +105,9 @@ export default function RegisterPage() {
         </Button>
       </form>
 
-      <p className="mt-4 text-sm text-gray-600">
+      <p className="mt-4 text-sm text-emerald-800">
         Already have an account?{" "}
-        <Link href="/login" className="text-blue-600 hover:underline">
+        <Link href="/login" className="text-emerald-700 hover:text-emerald-950 hover:underline">
           Log in
         </Link>
       </p>

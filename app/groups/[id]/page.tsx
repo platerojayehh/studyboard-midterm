@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getGroupById } from "@/lib/data";
+import { getGroupById } from "@/lib/services/groupService";
 import TaskItem from "@/components/TaskItem";
 import DeleteGroupButton from "@/components/DeleteGroupButton";
 import NewTaskForm from "@/components/NewTaskForm";

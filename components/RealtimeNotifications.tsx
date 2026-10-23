@@ -2,9 +2,7 @@
 
 import { socket } from "@/lib/socketClient";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
-import { set } from "zod";
-import { effect } from "zod/v3";
+import { useEffect, useState } from "react";
 
 type Notifications = {
     id: string;
@@ -21,8 +19,6 @@ export default function RealtimeNotifications({groupId}: {groupId: string}) {
     const [notifications, setNotifications] = useState<Notifications[]>([]);
 
     useEffect(() => {
-        socket.emit("join-group", groupId);
-
         function showToast(message: string){
             const id = crypto.randomUUID();
             setNotifications((prev) => [...prev, {id, message}]);
@@ -52,13 +48,25 @@ export default function RealtimeNotifications({groupId}: {groupId: string}) {
             router.push("/groups");
         }
 
+        function joinGroup() {
+            socket.emit("join-group", groupId);
+        }
+
         socket.on("task:created", onTaskCreated);
         socket.on("task:updated", onTaskUpdated);
         socket.on("task:deleted", onTaskDeleted);
         socket.on("group:deleted", onGroupDeleted);
+        socket.on("connect", joinGroup);
+
+        if (socket.connected) {
+            joinGroup();
+        }
 
         return () => {
-            socket.emit("leave-group", groupId);
+            if (socket.connected) {
+                socket.emit("leave-group", groupId);
+            }
+            socket.off("connect", joinGroup);
             socket.off("task:created", onTaskCreated);
             socket.off("task:updated", onTaskUpdated);
             socket.off("task:deleted", onTaskDeleted);
@@ -73,7 +81,7 @@ export default function RealtimeNotifications({groupId}: {groupId: string}) {
             {notifications.map((n) => (
                 <div 
                     key={n.id} 
-                    className="bg-gray-800 text-white px-4 py-2 rounded shadow"
+                    className="rounded bg-emerald-950 px-4 py-2 text-white shadow"
                 >
                     {n.message}
                 </div>
