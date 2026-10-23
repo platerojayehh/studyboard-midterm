@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getGroupById, updateGroup, deleteGroup } from "@/lib/data";
+import * as groupServices from "@/lib/services/groupService";
 import { updateGroupSchema } from "@/lib/validations";
-import { emitGroup } from "@/lib/socket";
-import { request } from "https";
+import { ForbiddenError, NotFoundError } from "@/lib/errors";
+
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const group = await getGroupById(params.id);
+  const group = await groupServices.getGroupById(params.id);
 
   if (!group) {
     return NextResponse.json({ error: "Group not found" }, { status: 404 });
@@ -40,36 +40,29 @@ export async function PATCH(
     )
   }
 
-  const group = await getGroupById(params.id);
-  if (!group){
-    return NextResponse.json(
-      {error: "Group not found"},
-      {status: 404}
-    );
-  }
-
-  if (group.ownerId !== session.user.id){
-    return NextResponse.json(
-      {error: "Only the owner can modify this group"},
-      {status: 403}
-    );
-  }
-
-  const updated = await updateGroup(params.id, body);
-
-  if (!updated) {
-    return NextResponse.json({ error: "Group not found" }, { status: 404 });
-  }
-
+  try {
+    const updated = await groupServices.updateGroup(
+    params.id,
+    session.user.id,
+    parsedResponse.data
+  );
   return NextResponse.json(updated);
+  } catch (error) {
+    if (error instanceof Error) {
+      return NextResponse.json({error: error.message}, {status: 404});
+    }
+    if (error instanceof ForbiddenError) {
+      return NextResponse.json({error: error.message}, {status: 403});
+    }  
+    throw error;
+  } 
 }
-
+  
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
-
   if (!session){
     return NextResponse.json(
       {error: "Unauthorized"},
@@ -77,33 +70,19 @@ export async function DELETE(
     );
   }
 
-  const group = await getGroupById(params.id);
-
-  if (!group){
-    return NextResponse.json(
-      {error: "Group not found"},
-      {status: 404}
+  try {
+    await groupServices.deleteGroup(
+      params.id,
+      session.user.id
     );
+    return NextResponse.json({message: "Group deleted"});
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return NextResponse.json({error: error.message}, {status: 404});
+    }
+    if (error instanceof ForbiddenError) {
+      return NextResponse.json({error: error.message}, {status: 403});
+    }
+    throw error;
   }
-
-  if (group.ownerId !== session.user.id){
-    return NextResponse.json(
-      {error: "Only the owner can delete this group"},
-      {status: 403}
-    );
-  }
-
-  const deleted = await deleteGroup(params.id);
-
-  if (!deleted) {
-    return NextResponse.json({ error: "Group not found" }, { status: 404 });
-  }
-
-  emitGroup(
-    params.id,
-    "group:deleted",
-    { groupId: params.id }
-  )
-
-  return NextResponse.json({ message: "Group deleted" });
 }

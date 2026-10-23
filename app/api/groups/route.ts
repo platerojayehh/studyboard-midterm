@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getGroups, createGroup } from "@/lib/data";
+import * as groupServices from "@/lib/services/groupService";
 import { createGroupSchema } from "@/lib/validations";
 
 export async function GET() {
-  const groups = await getGroups();
+  const groups = await groupServices.getGroups();
   return NextResponse.json(groups);
 }
 
@@ -21,18 +21,18 @@ export async function POST(request: Request) {
 
   const body = await request.json();
 
-  const parsedResponse = createGroupSchema.safeParse(body);
-  if (!parsedResponse.success) {
+  const parsed = createGroupSchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: parsedResponse.error.issues[0].message },
+      { error: parsed.error.issues[0].message },
       { status: 400 }
     );
   }
 
-  const newGroup = await createGroup({
-    ...parsedResponse.data,
-    ownerId: session.user.id,
-  });
+  const newGroup = await groupServices.createGroup(
+    parsed.data,
+    session.user.id
+  );
 
   return NextResponse.json(newGroup, { status: 201 });
 }

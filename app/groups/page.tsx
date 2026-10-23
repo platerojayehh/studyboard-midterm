@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import GroupCard from "@/components/GroupCard";
-import { getGroups } from "@/lib/data";
+import { getGroups } from "@/lib/services/groupService";
 
 export default async function GroupsPage() {
   const [groups, session] = await Promise.all([
@@ -17,7 +17,7 @@ export default async function GroupsPage() {
         {session && (
            <Link
             href="/groups/new"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-900"
           >
             + New Group
           </Link>
